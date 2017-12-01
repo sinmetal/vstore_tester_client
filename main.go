@@ -66,4 +66,6 @@ func Post() {
 		log.Errorf("response code = %d, body = %s", res.StatusCode, resBody)
 		return
 	}
+
+	log.Infof("response status = %s", res.Status)
 }
