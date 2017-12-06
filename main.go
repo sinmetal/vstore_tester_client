@@ -32,7 +32,10 @@ func main() {
 			lot := uuid.New().String()
 			i := i
 			go func() {
-				Post(lot, i)
+				err := Post(lot, i)
+				if err != nil {
+					fmt.Println(err.Error())
+				}
 			}()
 		}
 		time.Sleep(1 * time.Minute)
@@ -43,12 +46,13 @@ func Post(lot string, index int) error {
 	log := slog.Start(time.Now())
 	defer log.Flush()
 
+	contents := []string{
+		lot,
+		fmt.Sprintf("%d", index),
+		"hello client",
+	}
 	body := ItemAPIPostRequest{
-		Contents: []string{
-			lot,
-			fmt.Sprintf("%d", index),
-			"hello client",
-		},
+		Contents: contents,
 	}
 	b, err := json.Marshal(body)
 	if err != nil {
@@ -77,9 +81,27 @@ func Post(lot string, index int) error {
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("response code = %d, body = %s", res.StatusCode, resBody)
-		return fmt.Errorf("response code = %d, body = %s", res.StatusCode, resBody)
 	}
 
-	log.Infof("index = %d, response status = %s", index, res.Status)
+	lm := struct {
+		Lot                string   `json:"lot"`
+		Index              int      `json:"index"`
+		Contents           []string `json:"contents"`
+		ResponseStatusCode int      `json:"responseStatusCode"`
+		ResponseBody       string   `json:"responseBody"`
+	}{
+		Lot:                lot,
+		Index:              index,
+		Contents:           contents,
+		ResponseStatusCode: res.StatusCode,
+		ResponseBody:       string(resBody),
+	}
+	logJson, err := json.Marshal(lm)
+	if err != nil {
+		return errors.Wrap(err, "json.Marshal")
+	}
+
+	log.Info(string(logJson))
+
 	return nil
 }
