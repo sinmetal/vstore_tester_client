@@ -28,7 +28,7 @@ const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
 
 func main() {
 	for {
-		lot := uuid.New().String()
+		lot := fmt.Sprintf("%s-_-%s", time.Now().String(), uuid.New().String())
 		for i := 0; i < 1000; i++ {
 			i := i
 			go func() {
