@@ -16,6 +16,6 @@ steps:
     'GOOS=linux'
   ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--tag=gcr.io/$PROJECT_ID/sinmetal/vstore_tester_client', '.']
+  args: ['build', '--tag=gcr.io/$PROJECT_ID/sinmetal/vstore_tester_client/$BRANCH_NAME:$COMMIT_SHA', '.']
 
-images: ['gcr.io/$PROJECT_ID/sinmetal/vstore_tester_client']
+images: ['gcr.io/$PROJECT_ID/sinmetal/vstore_tester_client/$BRANCH_NAME:$COMMIT_SHA']
