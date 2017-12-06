@@ -28,8 +28,8 @@ const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
 
 func main() {
 	for {
+		lot := uuid.New().String()
 		for i := 0; i < 1000; i++ {
-			lot := uuid.New().String()
 			i := i
 			go func() {
 				err := Post(lot, i)
