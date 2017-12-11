@@ -14,14 +14,18 @@ import (
 )
 
 type ItemAPIPostRequest struct {
-	Contents []string
+	Lot      string   `json:"lot"`
+	Index    int      `json:"index"`
+	Contents []string `json:"contents"`
 }
 
 type ItemAPIPostResponse struct {
-	Key       string
-	Contents  []string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Key       string    `json:"key"`
+	Lot       string    `json:"lot"`
+	Index     int       `json:"index"`
+	Contents  []string  `json:"contents"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
@@ -55,6 +59,8 @@ func PostItem(lot string, index int) error {
 		"hello client",
 	}
 	body := ItemAPIPostRequest{
+		Lot:      lot,
+		Index:    index,
 		Contents: contents,
 	}
 	b, err := json.Marshal(body)
@@ -121,6 +127,8 @@ func PostItemOnlyOneClient(lot string, index int) error {
 		"hello client",
 	}
 	body := ItemAPIPostRequest{
+		Lot:      lot,
+		Index:    index,
 		Contents: contents,
 	}
 	b, err := json.Marshal(body)
