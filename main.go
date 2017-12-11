@@ -74,7 +74,8 @@ func PostItem(lot string, index int) error {
 		fmt.Sprintf("%s/item", vtServerURL),
 		strings.NewReader(string(b)),
 	)
-	log.Infof("%s", string(b))
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	log.Infof("request.body = %s", string(b))
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -142,7 +143,8 @@ func PostItemOnlyOneClient(lot string, index int) error {
 		fmt.Sprintf("%s/item/onlyoneclient", vtServerURL),
 		strings.NewReader(string(b)),
 	)
-	log.Infof("%s", string(b))
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	log.Infof("request.body = %s", string(b))
 
 	res, err := client.Do(req)
 	if err != nil {
