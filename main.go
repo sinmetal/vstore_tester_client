@@ -33,7 +33,7 @@ const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
 func main() {
 	for {
 		lot := fmt.Sprintf("%s-_-%s", time.Now().String(), uuid.New().String())
-		for i := 0; i < 500; i++ {
+		for i := 0; i < 200; i++ {
 			i := i
 			go func() {
 				if err := PostItem(lot, i); err != nil {
