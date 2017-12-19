@@ -33,31 +33,31 @@ const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
 func main() {
 	for {
 		lot := fmt.Sprintf("%s-_-%s", time.Now().String(), uuid.New().String())
+		retryInterval := 1
 		for i := 0; i < 200; i++ {
-			i := i
-			go func() {
-				if err := PostItem(lot, i); err != nil {
-					fmt.Println(err.Error())
-				}
+			if err := PostItem(lot, i); err != nil {
+				fmt.Println(err.Error())
+			}
 
-				key, err := PostItemOnlyOneClient(lot, i)
-				if err != nil {
+			key, err := PostItemOnlyOneClient(lot, i)
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				if err := UpdateItemOnlyOneClient(key); err != nil {
+					retryInterval++
 					fmt.Println(err.Error())
-				} else {
-					if err := UpdateItemOnlyOneClient(key); err != nil {
-						fmt.Println(err.Error())
-					}
-					if err := GetItemOnlyOneClient(key); err != nil {
-						fmt.Println(err.Error())
-					}
 				}
+				if err := GetItemOnlyOneClient(key); err != nil {
+					retryInterval++
+					fmt.Println(err.Error())
+				}
+			}
 
-				if err := PostItemCreateClientEveryTimeRetry(lot, i); err != nil {
-					fmt.Println(err.Error())
-				}
-			}()
+			if err := PostItemCreateClientEveryTimeRetry(lot, i); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
-		time.Sleep(77 * time.Second)
+		time.Sleep(77 * time.Duration(retryInterval) * time.Second)
 	}
 }
 
