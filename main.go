@@ -57,6 +57,9 @@ func main() {
 				fmt.Println(err.Error())
 			}
 		}
+		if retryInterval > 10 {
+			retryInterval = 10
+		}
 		time.Sleep(77 * time.Duration(retryInterval) * time.Second)
 	}
 }
