@@ -33,28 +33,34 @@ const vtServerURL = "http://vt-server-service.default.svc.cluster.local:8080"
 func main() {
 	for {
 		lot := fmt.Sprintf("%s-_-%s", time.Now().String(), uuid.New().String())
-		for i := 0; i < 500; i++ {
-			i := i
-			go func() {
-				if err := PostItem(lot, i); err != nil {
-					fmt.Println(err.Error())
-				}
+		retryInterval := 1
+		for i := 0; i < 200; i++ {
+			if err := PostItem(lot, i); err != nil {
+				fmt.Println(err.Error())
+			}
 
-				key, err := PostItemOnlyOneClient(lot, i)
-				if err != nil {
+			key, err := PostItemOnlyOneClient(lot, i)
+			if err != nil {
+				fmt.Println(err.Error())
+			} else {
+				if err := UpdateItemOnlyOneClient(key); err != nil {
+					retryInterval++
 					fmt.Println(err.Error())
-				} else {
-					if err := UpdateItemOnlyOneClient(key); err != nil {
-						fmt.Println(err.Error())
-					}
 				}
+				if err := GetItemOnlyOneClient(key); err != nil {
+					retryInterval++
+					fmt.Println(err.Error())
+				}
+			}
 
-				if err := PostItemCreateClientEveryTimeRetry(lot, i); err != nil {
-					fmt.Println(err.Error())
-				}
-			}()
+			if err := PostItemCreateClientEveryTimeRetry(lot, i); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
-		time.Sleep(77 * time.Second)
+		if retryInterval > 10 {
+			retryInterval = 10
+		}
+		time.Sleep(77 * time.Duration(retryInterval) * time.Second)
 	}
 }
 
@@ -327,6 +333,55 @@ func UpdateItemOnlyOneClient(key string) error {
 		ResponseBody       string `json:"responseBody"`
 	}{
 		Resource:           "UpdateItemOnlyOneClient",
+		Key:                key,
+		ResponseStatusCode: res.StatusCode,
+		ResponseBody:       string(resBody),
+	}
+	logJson, err := json.Marshal(lm)
+	if err != nil {
+		return errors.Wrap(err, "json.Marshal")
+	}
+
+	log.Info(string(logJson))
+
+	return nil
+}
+
+func GetItemOnlyOneClient(key string) error {
+	log := slog.Start(time.Now())
+	defer log.Flush()
+
+	client := new(http.Client)
+	req, err := http.NewRequest(
+		http.MethodGet,
+		fmt.Sprintf("%s/item/onlyoneclient?key=%s", vtServerURL, key),
+		nil,
+	)
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Errorf("client.Do err = %s", err.Error())
+		return errors.Wrap(err, "client.Do err")
+	}
+
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Errorf("request.Body %s", err.Error())
+		return errors.Wrap(err, "read request.Body")
+	}
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("response code = %d, body = %s", res.StatusCode, resBody)
+	}
+
+	lm := struct {
+		Resource           string `json:"resource"`
+		Key                string `json:"key"`
+		ResponseStatusCode int    `json:"responseStatusCode"`
+		ResponseBody       string `json:"responseBody"`
+	}{
+		Resource:           "GetItemOnlyOneClient",
 		Key:                key,
 		ResponseStatusCode: res.StatusCode,
 		ResponseBody:       string(resBody),
